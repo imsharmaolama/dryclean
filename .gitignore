@@ -1,7 +1,14 @@
+# Environment secrets (copy config/.env.example -> config/.env)
+/config/.env
+
 # SQLite runtime database (auto-created on first run by database/init.php)
 /data/*.sqlite
 /data/*.sqlite-wal
 /data/*.sqlite-shm
+
+# Runtime artifacts
+/data/notifications.log
+/data/ratelimit/
 
 # OS / editor noise
 .DS_Store

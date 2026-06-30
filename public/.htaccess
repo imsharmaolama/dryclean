@@ -3,6 +3,9 @@
 # Pretty default document
 DirectoryIndex index.php
 
+# Custom error page
+ErrorDocument 404 /404.php
+
 # Security headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
@@ -25,7 +28,12 @@ DirectoryIndex index.php
     AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
 </IfModule>
 
-# Block direct access to dotfiles
-<FilesMatch "^\.">
+# Correct MIME type for the web app manifest
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
+# Never serve the env file or VCS metadata, even if misplaced
+<FilesMatch "(^\.|\.env$)">
     Require all denied
 </FilesMatch>

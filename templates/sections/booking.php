@@ -89,6 +89,14 @@
                     <span class="btn__spinner" aria-hidden="true"></span>
                 </button>
 
+                <div class="booking-form__or"><span>or</span></div>
+
+                <button type="button" class="btn btn--wa btn--lg btn--block" id="bookWhatsApp"
+                        data-wa="<?= e(app_config('app.whatsapp')) ?>" data-magnetic>
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><use href="#i-chat"></use></svg>
+                    Book instantly on WhatsApp
+                </button>
+
                 <p class="booking-form__feedback" id="bookingFeedback" role="status" aria-live="polite"></p>
             </form>
         </div>

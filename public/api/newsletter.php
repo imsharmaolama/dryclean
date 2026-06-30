@@ -3,8 +3,15 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../src/bootstrap.php';
 
+use Lumina\RateLimiter;
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['ok' => false, 'message' => 'Method not allowed.'], 405);
+}
+
+$ip = RateLimiter::clientIp();
+if (!RateLimiter::allow('newsletter', $ip, (int) app_config('rate_limit.max', 8), (int) app_config('rate_limit.window', 600))) {
+    json_response(['ok' => false, 'message' => 'Too many requests. Please try again later.'], 429);
 }
 
 $raw  = file_get_contents('php://input');

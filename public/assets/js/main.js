@@ -314,6 +314,23 @@
         });
     }
 
+    // WhatsApp instant booking — prefill a message from the form fields
+    var waBtn = document.getElementById('bookWhatsApp');
+    if (waBtn && bookingForm) {
+        waBtn.addEventListener('click', function () {
+            var number = waBtn.getAttribute('data-wa') || '';
+            var f = bookingForm;
+            var lines = ['Hi Lachman Sons, I would like to book a pickup.', ''];
+            if (f.name.value)    lines.push('Name: ' + f.name.value);
+            if (f.phone.value)   lines.push('Phone: ' + f.phone.value);
+            if (f.area.value)    lines.push('Area: ' + f.area.value);
+            if (f.service.value) lines.push('Service: ' + f.service.value);
+            if (f.message.value) lines.push('Notes: ' + f.message.value);
+            var text = encodeURIComponent(lines.join('\n'));
+            window.open('https://wa.me/' + number + '?text=' + text, '_blank', 'noopener');
+        });
+    }
+
     // Initial paint
     onScroll();
 })();
