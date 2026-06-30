@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.2", "8.3", "8.4"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo, pdo_sqlite, sqlite3, mbstring
+          coverage: none
+
+      - name: Lint all PHP files
+        run: |
+          set -e
+          find . -path ./vendor -prune -o -name "*.php" -print | while read -r f; do
+            php -l "$f" > /dev/null
+          done
+          echo "All PHP files passed lint."
+
+      - name: Initialise database
+        run: php database/init.php --fresh
+
+      - name: Verify seed data
+        run: |
+          php -r '
+            $p = new PDO("sqlite:data/lsdrycleaners.sqlite");
+            $expect = ["services"=>6,"features"=>6,"steps"=>4,"stats"=>4,"testimonials"=>6,"pricing_categories"=>3,"pricing_items"=>13];
+            foreach ($expect as $t=>$n) {
+              $c = (int)$p->query("SELECT COUNT(*) FROM $t")->fetchColumn();
+              if ($c !== $n) { fwrite(STDERR, "FAIL $t: expected $n got $c\n"); exit(1); }
+            }
+            echo "Seed data verified.\n";
+          '
+
+      - name: Smoke test (server + endpoints)
+        run: |
+          set -e
+          php -S 127.0.0.1:8123 -t public > /tmp/server.log 2>&1 &
+          SERVER_PID=$!
+          sleep 2
+
+          echo "→ Homepage"
+          code=$(curl -s -o /tmp/home.html -w "%{http_code}" -c /tmp/cj.txt http://127.0.0.1:8123/)
+          test "$code" = "200" || { echo "Homepage returned $code"; cat /tmp/server.log; exit 1; }
+          grep -q "Lachman Sons" /tmp/home.html || { echo "Brand missing"; exit 1; }
+
+          TOKEN=$(grep -o 'name="csrf-token" content="[a-f0-9]*"' /tmp/home.html | grep -o '[a-f0-9]\{64\}')
+          test -n "$TOKEN" || { echo "No CSRF token"; exit 1; }
+
+          echo "→ Booking (valid)"
+          resp=$(curl -s -b /tmp/cj.txt -X POST http://127.0.0.1:8123/api/booking.php \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"CI Bot\",\"phone\":\"+91 98100 00000\",\"message\":\"smoke test\",\"csrf\":\"$TOKEN\"}")
+          echo "$resp" | grep -q '"ok":true' || { echo "Booking failed: $resp"; exit 1; }
+
+          echo "→ Booking (validation)"
+          resp=$(curl -s -b /tmp/cj.txt -X POST http://127.0.0.1:8123/api/booking.php \
+            -H "Content-Type: application/json" -d "{\"name\":\"\",\"phone\":\"1\",\"csrf\":\"$TOKEN\"}")
+          echo "$resp" | grep -q '"ok":false' || { echo "Validation should fail: $resp"; exit 1; }
+
+          echo "→ Newsletter (valid)"
+          resp=$(curl -s -b /tmp/cj.txt -X POST http://127.0.0.1:8123/api/newsletter.php \
+            -H "Content-Type: application/json" -d "{\"email\":\"ci@example.com\",\"csrf\":\"$TOKEN\"}")
+          echo "$resp" | grep -q '"ok":true' || { echo "Newsletter failed: $resp"; exit 1; }
+
+          echo "→ Admin (401 without auth)"
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8123/admin/)
+          test "$code" = "401" || { echo "Admin should require auth, got $code"; exit 1; }
+
+          kill $SERVER_PID
+          echo "All smoke tests passed."

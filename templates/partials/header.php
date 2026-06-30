@@ -1,4 +1,31 @@
-<?php /** @var string $token */ ?>
+<?php
+/** @var string $token */
+$baseUrl  = (string) app_config('app.base_url', '');
+$ogImage  = $baseUrl !== '' ? $baseUrl . '/assets/img/icons/bucket.png' : 'assets/img/icons/bucket.png';
+$jsonLd = [
+    '@context' => 'https://schema.org',
+    '@type'    => 'DryCleaningOrLaundry',
+    'name'     => app_config('app.full_name'),
+    'image'    => $ogImage,
+    'description' => 'Premium dry cleaning, steam ironing and garment care with free doorstep pickup & delivery across South Delhi and Gurgaon. Trusted since ' . app_config('app.since') . '.',
+    'telephone'  => app_config('app.phone'),
+    'email'      => app_config('app.email'),
+    'foundingDate' => (string) app_config('app.since'),
+    'priceRange'   => '₹₹',
+    'areaServed'   => ['South Delhi', 'Gurgaon', 'Delhi NCR'],
+    'address'    => [
+        '@type'           => 'PostalAddress',
+        'addressLocality' => 'South Delhi',
+        'addressRegion'   => 'Delhi',
+        'addressCountry'  => 'IN',
+    ],
+    'openingHoursSpecification' => [
+        ['@type' => 'OpeningHoursSpecification', 'dayOfWeek' => ['Monday','Tuesday','Wednesday','Thursday','Friday'], 'opens' => '08:00', 'closes' => '14:00'],
+        ['@type' => 'OpeningHoursSpecification', 'dayOfWeek' => ['Saturday'], 'opens' => '09:00', 'closes' => '18:00'],
+    ],
+    'aggregateRating' => ['@type' => 'AggregateRating', 'ratingValue' => '4.9', 'reviewCount' => '1200'],
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,11 +34,20 @@
     <meta name="theme-color" content="#06121f">
     <title><?= e(app_config('app.full_name')) ?> — Premium Dry Cleaning in South Delhi &amp; Gurgaon</title>
     <meta name="description" content="Lachman Sons Drycleaners — trusted since 1980. Free doorstep pickup &amp; delivery, expert dry cleaning, steam ironing, leather &amp; wedding wear care across South Delhi and Gurgaon.">
+    <meta name="keywords" content="dry cleaning South Delhi, dry cleaners Gurgaon, laundry pickup delivery, steam ironing, leather cleaning, wedding suit dry clean, Lachman Sons">
     <meta name="csrf-token" content="<?= e($token) ?>">
+    <?php if ($baseUrl !== ''): ?><link rel="canonical" href="<?= e($baseUrl) ?>/"><?php endif; ?>
 
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<?= e(app_config('app.full_name')) ?>">
     <meta property="og:title" content="<?= e(app_config('app.full_name')) ?> — Premium Dry Cleaning">
     <meta property="og:description" content="Trusted since 1980. Free doorstep pickup &amp; delivery across South Delhi and Gurgaon.">
+    <meta property="og:image" content="<?= e($ogImage) ?>">
+    <?php if ($baseUrl !== ''): ?><meta property="og:url" content="<?= e($baseUrl) ?>/"><?php endif; ?>
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e(app_config('app.full_name')) ?> — Premium Dry Cleaning">
+    <meta name="twitter:description" content="Trusted since 1980. Free doorstep pickup &amp; delivery across South Delhi and Gurgaon.">
+    <meta name="twitter:image" content="<?= e($ogImage) ?>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +55,11 @@
     <link rel="preload" href="assets/img/icons/bucket.png" as="image">
 
     <link rel="icon" type="image/png" href="assets/img/icons/bucket.png">
+    <link rel="apple-touch-icon" href="assets/img/icons/bucket.png">
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="assets/css/styles.css">
+
+    <script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
 </head>
 <body data-scroll-container>
 

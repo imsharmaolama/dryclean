@@ -94,3 +94,34 @@ function repo_subscribe_newsletter(string $email): string
 
     return 'created';
 }
+
+// ---- Admin read helpers --------------------------------------------------
+
+function repo_all_pickups(int $limit = 500): array
+{
+    $stmt = Database::connection()->prepare(
+        'SELECT * FROM pickup_requests ORDER BY id DESC LIMIT :lim'
+    );
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+function repo_all_subscribers(int $limit = 500): array
+{
+    $stmt = Database::connection()->prepare(
+        'SELECT * FROM newsletter_subscribers ORDER BY id DESC LIMIT :lim'
+    );
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+function repo_count(string $table): int
+{
+    $allowed = ['pickup_requests', 'newsletter_subscribers', 'services', 'testimonials'];
+    if (!in_array($table, $allowed, true)) {
+        return 0;
+    }
+    return (int) Database::connection()->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
+}

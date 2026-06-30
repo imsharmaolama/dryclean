@@ -3,11 +3,14 @@
  * Lachman Sons Drycleaners (LS Dry Cleaners) – Application configuration.
  *
  * Ships with a zero-config SQLite database so it runs anywhere PHP is
- * installed. To use MySQL, set DB_DRIVER=mysql with the related env vars;
- * the schema in database/schema.mysql.sql is provided for that path.
+ * installed. To use MySQL, set DB_DRIVER=mysql with the related env vars.
+ * Copy config/.env.example to config/.env to override any value.
  */
 
 declare(strict_types=1);
+
+require_once __DIR__ . '/../src/env.php';
+env_load(__DIR__ . '/.env');
 
 return [
     'app' => [
@@ -22,8 +25,8 @@ return [
         'whatsapp'    => '919891643790',
         'location'    => 'South Delhi · Gurgaon',
         'address'     => 'South Delhi & Gurgaon, India',
-        'env'         => getenv('APP_ENV') ?: 'production',
-        'base_url'    => getenv('BASE_URL') ?: '',
+        'env'         => env('APP_ENV', 'production'),
+        'base_url'    => rtrim((string) env('BASE_URL', ''), '/'),
     ],
 
     'hours' => [
@@ -34,18 +37,44 @@ return [
 
     'db' => [
         // 'sqlite' (default, no server required) or 'mysql'
-        'driver'   => getenv('DB_DRIVER') ?: 'sqlite',
+        'driver'   => env('DB_DRIVER', 'sqlite'),
         'sqlite'   => [
             'path' => __DIR__ . '/../data/lsdrycleaners.sqlite',
         ],
         'mysql'    => [
-            'host'     => getenv('DB_HOST') ?: '127.0.0.1',
-            'port'     => getenv('DB_PORT') ?: '3306',
-            'database' => getenv('DB_NAME') ?: 'ls_drycleaners',
-            'username' => getenv('DB_USER') ?: 'root',
-            'password' => getenv('DB_PASS') ?: '',
+            'host'     => env('DB_HOST', '127.0.0.1'),
+            'port'     => env('DB_PORT', '3306'),
+            'database' => env('DB_NAME', 'ls_drycleaners'),
+            'username' => env('DB_USER', 'root'),
+            'password' => env('DB_PASS', ''),
             'charset'  => 'utf8mb4',
         ],
+    ],
+
+    'mail' => [
+        // 'log' (writes data/notifications.log), 'mail' (PHP mail()), or 'smtp'
+        'driver'     => env('MAIL_DRIVER', 'log'),
+        'from_email' => env('MAIL_FROM_EMAIL', 'care@lsdrycleaners.in'),
+        'from_name'  => env('MAIL_FROM_NAME', 'Lachman Sons Drycleaners'),
+        'to'         => env('MAIL_TO', 'owner@lsdrycleaners.in'),
+        'smtp'       => [
+            'host'   => env('SMTP_HOST', ''),
+            'port'   => (int) env('SMTP_PORT', 587),
+            'secure' => env('SMTP_SECURE', 'tls'), // tls | ssl | none
+            'user'   => env('SMTP_USER', ''),
+            'pass'   => env('SMTP_PASS', ''),
+        ],
+    ],
+
+    'admin' => [
+        'user'      => env('ADMIN_USER', 'admin'),
+        'pass'      => env('ADMIN_PASS', 'change-me-please'),
+        'pass_hash' => env('ADMIN_PASS_HASH', ''),
+    ],
+
+    'rate_limit' => [
+        'max'    => (int) env('RATE_LIMIT_MAX', 8),
+        'window' => (int) env('RATE_LIMIT_WINDOW', 600),
     ],
 
     'social' => [
