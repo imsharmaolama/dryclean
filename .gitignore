@@ -1,0 +1,9 @@
+# SQLite runtime database (auto-created on first run by database/init.php)
+/data/*.sqlite
+/data/*.sqlite-wal
+/data/*.sqlite-shm
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
